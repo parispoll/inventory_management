@@ -1,0 +1,17 @@
+{% extends 'inventory/base.html' %}
+
+{% block content %}
+<h1>Kresten Warehouse</h1>
+<div>
+	<div class="row">
+		<div class="col-sm-ll col-md-5 mx-auto mt-5 px-3">
+		<h1 class="fw-light">Track and Manage Your Inventory</h1>
+		<p class="fw-light">Keep track of your inventory and receive quantity alerts for low inventory</p>
+
+		<div>
+			<a href="{% url 'dashboard' %}" class="btn btn-primary">Get Started Now!</a>
+		</div>	
+
+	</div>
+</div>
+{% endblock content %}
