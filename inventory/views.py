@@ -7,6 +7,7 @@ from .forms import UserRegisterForm, InventoryItemForm
 from .models import InventoryItem, Category
 from inventory_management.settings import LOW_QUANTITY
 from django.contrib import messages
+from django.db import models  # Import models her
 
 class Index(TemplateView):
 	template_name= 'inventory/index.html'
@@ -74,3 +75,29 @@ class DeleteItem(LoginRequiredMixin, DeleteView):
 	template_name = 'inventory/delete_item.html'
 	success_url = reverse_lazy('dashboard')
 	context_object_name = 'item'
+
+class InventorySummaryReport(LoginRequiredMixin, View):
+    def get(self, request):
+        total_items = InventoryItem.objects.filter(user=self.request.user).count()
+        total_quantity = InventoryItem.objects.filter(user=self.request.user).aggregate(total_quantity=models.Sum('quantity'))['total_quantity'] or 0
+        categories = Category.objects.all()
+        category_counts = {category.name: InventoryItem.objects.filter(user=self.request.user, category=category).count() for category in categories}
+
+        context = {
+            'total_items': total_items,
+            'total_quantity': total_quantity,
+            'category_counts': category_counts,
+        }
+        return render(request, 'inventory/inventory_summary_report.html', context)
+
+class LowStockReport(LoginRequiredMixin, View):
+    def get(self, request):
+        low_stock_items = InventoryItem.objects.filter(user=self.request.user, quantity__lte=LOW_QUANTITY)
+        context = {
+            'low_stock_items': low_stock_items,
+        }
+        return render(request, 'inventory/low_stock_report.html', context)
+
+def category_list(request):
+    categories = Category.objects.filter(parent__isnull=True)
+    return render(request, 'category_list.html', {'categories': categories})       

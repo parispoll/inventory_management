@@ -1,5 +1,9 @@
 from django.contrib import admin
-from .models import InventoryItem, Category
+from .models import Category
 
-admin.site.register(InventoryItem)
-admin.site.register(Category)
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ('name', 'parent')
+    search_fields = ('name',)
+    list_filter = ('parent',)
+
+admin.site.register(Category, CategoryAdmin)

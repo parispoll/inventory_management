@@ -15,3 +15,13 @@ class InventoryItemForm(forms.ModelForm):
 	class Meta:
 		model = InventoryItem
 		fields = ['name','quantity','category']
+
+class CategoryForm(forms.ModelForm):
+    class Meta:
+        model = Category
+        fields = ['name', 'parent']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Adjust parent field to show a hierarchy in a dropdown
+        self.fields['parent'].queryset = Category.objects.all()
