@@ -1,0 +1,36 @@
+{% extends 'inventory/base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1>Items in Category: {{ category.name }}</h1>
+    <a href="{% url 'dashboard' %}" class="btn btn-outline-primary my-3">Go Back</a>
+    
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th scope="col">Name</th>
+                <th scope="col">Quantity</th>
+                <th scope="col">Price</th>
+                <th scope="col">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr>
+                <td>{{ item.name }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>{{ item.price }}</td>
+                <td>
+                    <a href="{% url 'edit-item' item.id %}?next={% url 'items-by-category' category.id %}" class="btn btn-sm btn-warning">Edit</a>
+                    <form action="{% url 'delete-item' item.id %}?next={% url 'items-by-category' category.id %}" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                    </form>
+</td>
+
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock content %}

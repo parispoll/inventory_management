@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import Index, SignUpView, Dashboard, AddItem, EditItem, DeleteItem, InventorySummaryReport, LowStockReport
+from .views import Index, SignUpView, Dashboard, AddItem, EditItem, DeleteItem, InventorySummaryReport, LowStockReport, ItemsByCategoryView
 from django.contrib.auth import views as auth_views
 
 urlpatterns = [
@@ -13,5 +13,6 @@ urlpatterns = [
     path('logout/', auth_views.LogoutView.as_view(template_name='inventory/logout.html'), name='logout'),
     path('inventory-summary/', InventorySummaryReport.as_view(), name='inventory-summary'),
     path('low-stock/', LowStockReport.as_view(), name='low-stock'),
+    path('items-by-category/<int:category_id>/', ItemsByCategoryView.as_view(), name='items-by-category'),
             ]
 

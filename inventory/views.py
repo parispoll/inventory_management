@@ -1,5 +1,5 @@
-from django.shortcuts import render, redirect
-from django.urls import reverse_lazy
+from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse_lazy, reverse
 from django.views.generic import TemplateView, View, CreateView, UpdateView, DeleteView
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -8,6 +8,7 @@ from .models import InventoryItem, Category
 from inventory_management.settings import LOW_QUANTITY
 from django.contrib import messages
 from django.db import models  # Import models her
+from django.db.models import Sum
 
 class Index(TemplateView):
 	template_name= 'inventory/index.html'
@@ -64,24 +65,40 @@ class AddItem(LoginRequiredMixin, CreateView):
 		form.instance.user = self.request.user
 		return super().form_valid(form)
 
-class EditItem(LoginRequiredMixin, UpdateView):
-	model = InventoryItem
-	form_class = InventoryItemForm
-	template_name = 'inventory/item_form.html'
-	success_url = reverse_lazy('dashboard')
+class EditItem(LoginRequiredMixin, View):
+    def get(self, request, item_id):
+        item = get_object_or_404(InventoryItem, id=item_id, user=request.user)
+        form = InventoryItemForm(instance=item)
+        return render(request, 'inventory/edit_item.html', {'form': form, 'item': item})
 
-class DeleteItem(LoginRequiredMixin, DeleteView):
-	model = InventoryItem
-	template_name = 'inventory/delete_item.html'
-	success_url = reverse_lazy('dashboard')
-	context_object_name = 'item'
+    def post(self, request, item_id):
+        item = get_object_or_404(InventoryItem, id=item_id, user=request.user)
+        form = InventoryItemForm(request.POST, instance=item)
+        if form.is_valid():
+            form.save()
+            next_url = request.GET.get('next', 'dashboard')
+            return redirect(next_url)
+        return render(request, 'inventory/edit_item.html', {'form': form, 'item': item})
+
+
+class DeleteItem(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        item = get_object_or_404(InventoryItem, pk=pk, user=self.request.user)
+        item.delete()
+        return redirect('dashboard')
 
 class InventorySummaryReport(LoginRequiredMixin, View):
     def get(self, request):
-        total_items = InventoryItem.objects.filter(user=self.request.user).count()
-        total_quantity = InventoryItem.objects.filter(user=self.request.user).aggregate(total_quantity=models.Sum('quantity'))['total_quantity'] or 0
-        categories = Category.objects.all()
-        category_counts = {category.name: InventoryItem.objects.filter(user=self.request.user, category=category).count() for category in categories}
+        items = InventoryItem.objects.filter(user=self.request.user)
+        total_items = items.count()
+        total_quantity = items.aggregate(Sum('quantity'))['quantity__sum'] or 0
+
+        category_counts = {}
+        for item in items:
+            if item.category in category_counts:
+                category_counts[item.category] += item.quantity
+            else:
+                category_counts[item.category] = item.quantity
 
         context = {
             'total_items': total_items,
@@ -89,6 +106,7 @@ class InventorySummaryReport(LoginRequiredMixin, View):
             'category_counts': category_counts,
         }
         return render(request, 'inventory/inventory_summary_report.html', context)
+
 
 class LowStockReport(LoginRequiredMixin, View):
     def get(self, request):
@@ -101,3 +119,14 @@ class LowStockReport(LoginRequiredMixin, View):
 def category_list(request):
     categories = Category.objects.filter(parent__isnull=True)
     return render(request, 'category_list.html', {'categories': categories})       
+
+class ItemsByCategoryView(LoginRequiredMixin, View):
+    def get(self, request, category_id):
+        category = get_object_or_404(Category, id=category_id)
+        items = InventoryItem.objects.filter(category=category, user=self.request.user)
+        
+        context = {
+            'category': category,
+            'items': items,
+        }
+        return render(request, 'inventory/items_by_category.html', context)

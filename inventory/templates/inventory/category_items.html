@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ category.name }} - Items</title>
+    <!-- Load static files -->
+    {% load static %}
+    <!-- Include Bootstrap CSS (or other CSS frameworks you use) -->
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="mb-4">Items in {{ category.name }}</h1>
+
+        <!-- Show category items -->
+        <table class="table table-hover table-striped">
+            <thead>
+                <tr>
+                    <th scope="col">ID</th>
+                    <th scope="col">Name</th>
+                    <th scope="col">Qty</th>
+                    <th scope="col">Category</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if items|length == 0 %}
+                    <tr>
+                        <td colspan="4" class="text-center">No items found in this category.</td>
+                    </tr>
+                {% else %}
+                    {% for item in items %}
+                        <tr>
+                            <th scope="row">{{ item.id }}</th>
+                            <td>{{ item.name }}</td>
+                            {% if item.id in low_inventory_ids %}
+                                <td class="text-danger">
+                                    <span class="badge bg-danger">{{ item.quantity }}</span>
+                                </td>
+                            {% else %}
+                                <td class="text-success">
+                                    <span class="badge bg-success">{{ item.quantity }}</span>
+                                </td>
+                            {% endif %}
+                            <td>{{ item.category.name }}</td>
+                        </tr>
+                    {% endfor %}
+                {% endif %}
+            </tbody>
+        </table>
+
+        <!-- Back to dashboard button -->
+        <a href="{% url 'dashboard' %}" class="btn btn-primary mt-3">Back to Dashboard</a>
+    </div>
+
+    <!-- Include Bootstrap JS (or other JS frameworks you use) -->
+    <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+</body>
+</html>

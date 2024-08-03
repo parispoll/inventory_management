@@ -12,7 +12,9 @@
                 <h3>Items by Category:</h3>
                 <ul>
                     {% for category, count in category_counts.items %}
-                        <li>{{ category }}: {{ count }}</li>
+                        <li>
+                            <a href="{% url 'items-by-category' category.id %}">{{ category.name }}: {{ count }}</a>
+                        </li>
                     {% endfor %}
                 </ul>
             </div>
