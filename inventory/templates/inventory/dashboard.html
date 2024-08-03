@@ -67,11 +67,14 @@
                             {% endif %}
                             <td>{{ item.category.name }}</td>
                             <td>
-                                <a href="{% url 'edit-item' item.id %}" class="btn btn-outline-secondary">Edit</a>
-                            </td>
-                            <td>
-                                <a href="{% url 'delete-item' item.id %}" class="btn btn-secondary">Delete</a>
-                            </td>
+    							<a href="{% url 'edit-item' item.id %}?next={% url 'dashboard' %}" class="btn btn-sm btn-warning">Edit</a>
+    							<form action="{% url 'delete-item' item.id %}" method="post" style="display: inline;">
+        						{% csrf_token %}
+        						<input type="hidden" name="next" value="{% url 'dashboard' %}">
+        						<button type="submit" class="btn btn-sm btn-danger">Delete</button>
+    </form>
+</td>
+
                         </tr>
                     {% endfor %}
                 </tbody>
