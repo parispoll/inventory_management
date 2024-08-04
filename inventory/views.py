@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy, reverse
-from django.views.generic import TemplateView, View, CreateView, UpdateView, DeleteView
+from django.views.generic import TemplateView, View, CreateView, UpdateView, DeleteView, ListView
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.mixins import LoginRequiredMixin
 from .forms import UserRegisterForm, InventoryItemForm
@@ -8,27 +8,44 @@ from .models import InventoryItem, Category
 from inventory_management.settings import LOW_QUANTITY
 from django.contrib import messages
 from django.db import models  # Import models her
-from django.db.models import Sum
+from django.db.models import Sum, Count, F
 
 class Index(TemplateView):
 	template_name= 'inventory/index.html'
 
 class Dashboard(LoginRequiredMixin, View):
-	def get(self,request):
-		items = InventoryItem.objects.filter(user=self.request.user.id).order_by('id')
+    def get(self, request):
+        sort_by = request.GET.get('sort', 'category')  # Default sorting by 'category'
 
-		low_inventory = InventoryItem.objects.filter(user=self.request.user.id,quantity__lte=LOW_QUANTITY)
-		low_inventory_ids = []
+        # Validate the sort_by parameter
+        if sort_by not in ['id', 'category', 'subcategory', 'name', 'quantity']:
+            sort_by = 'category'  # Default to 'category' if invalid sort_by parameter
 
-		if low_inventory.count()>0:
-			if low_inventory.count()>1:
-				messages.error(request, f'{low_inventory.count()} items have low inventory')
-			else:
-				messages.error(request, f'{low_inventory.count()} item has low inventory')
+        # Fetch items with their categories and subcategories
+        items = InventoryItem.objects.filter(user=request.user.id).select_related('category__parent')
 
-			low_inventory_ids = InventoryItem.objects.filter(user=self.request.user.id,quantity__lte=LOW_QUANTITY).values_list('id', flat=True)
+        # Sort the items based on the selected option
+        if sort_by == 'subcategory':
+            items = items.order_by('category__parent', 'category', 'name')
+        else:
+            items = items.order_by(sort_by)
+        
+        low_inventory = InventoryItem.objects.filter(user=request.user.id, quantity__lte=LOW_QUANTITY)
+        low_inventory_ids = []
 
-		return render(request, 'inventory/dashboard.html', {'items': items, 'low_inventory_ids': low_inventory_ids})
+        if low_inventory.count() > 0:
+            if low_inventory.count() > 1:
+                messages.error(request, f'{low_inventory.count()} items have low inventory')
+            else:
+                messages.error(request, f'{low_inventory.count()} item has low inventory')
+
+            low_inventory_ids = low_inventory.values_list('id', flat=True)
+
+        return render(request, 'inventory/dashboard.html', {
+            'items': items,
+            'low_inventory_ids': low_inventory_ids,
+            'sort_by': sort_by
+        })
 
 class SignUpView(View):
 	def get(self, request):
@@ -93,12 +110,8 @@ class InventorySummaryReport(LoginRequiredMixin, View):
         total_items = items.count()
         total_quantity = items.aggregate(Sum('quantity'))['quantity__sum'] or 0
 
-        category_counts = {}
-        for item in items:
-            if item.category in category_counts:
-                category_counts[item.category] += item.quantity
-            else:
-                category_counts[item.category] = item.quantity
+        # Get the count of items per category
+        category_counts = Category.objects.filter(inventoryitem__user=self.request.user).annotate(item_count=Count('inventoryitem')).values('id', 'name', 'item_count')
 
         context = {
             'total_items': total_items,
