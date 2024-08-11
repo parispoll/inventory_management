@@ -13,7 +13,12 @@
                 <ul>
                     {% for category in category_counts %}
                         <li>
-                            <a href="{% url 'items-by-category' category.id %}">{{ category.name }}: {{ category.item_count }}</a>
+                            <a href="{% url 'items-by-category' category.id %}">
+                                {% if category.parent %}
+                                    {{ category.parent.name }} - 
+                                {% endif %}
+                                {{ category.name }}: {{ category.item_count }}
+                            </a>
                         </li>
                     {% endfor %}
                 </ul>
