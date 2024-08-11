@@ -1,0 +1,29 @@
+[33mcommit dae9d64ccaa5f3d026d4ddbb75925c26e400352e[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m)[m
+Author: Paris <paris_pollezel@hotmail.com>
+Date:   Sun Aug 4 15:36:51 2024 +0300
+
+    Items by subcategories
+
+[33mcommit bd0a132f2b29a0fbffa24903bdd69f51df6e2fcb[m
+Author: Paris <paris_pollezel@hotmail.com>
+Date:   Sat Aug 3 20:41:43 2024 +0300
+
+    Edit item redirects correctly
+
+[33mcommit 013d888585034fab5b9e4d6b372b5959c7693612[m
+Author: Paris <paris_pollezel@hotmail.com>
+Date:   Sat Aug 3 20:31:55 2024 +0300
+
+    Before changing deleteView
+
+[33mcommit 896fc39873aaf752fd48b35ec66b9399098b0f04[m[33m ([m[1;32mnew_dashboard[m[33m)[m
+Author: Paris <paris_pollezel@hotmail.com>
+Date:   Fri Aug 2 20:41:38 2024 +0300
+
+    before changing categories
+
+[33mcommit 3c62e7e32b3d06082be5457def2253a29a3bece0[m
+Author: Paris <paris_pollezel@hotmail.com>
+Date:   Wed Jul 31 21:25:03 2024 +0300
+
+    Initial commit

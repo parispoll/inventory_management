@@ -1,0 +1,19 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+  <h1>Bulk Add Inventory Items</h1>
+  <form method="post">
+    {% csrf_token %}
+    {{ formset.management_form }}
+    <table>
+      {% for form in formset %}
+        <tr>
+          {% for field in form %}
+            <td>{{ field.label_tag }}</td>
+            <td>{{ field }}</td>
+          {% endfor %}
+        </tr>
+      {% endfor %}
+    </table>
+    <button type="submit">Submit</button>
+  </form>
+{% endblock %}

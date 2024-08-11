@@ -4,7 +4,7 @@ from django.views.generic import TemplateView, View, CreateView, UpdateView, Del
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.mixins import LoginRequiredMixin
 from .forms import UserRegisterForm, InventoryItemForm
-from .models import InventoryItem, Category
+from .models import InventoryItem, Category, Order
 from inventory_management.settings import LOW_QUANTITY
 from django.contrib import messages
 from django.db import models  # Import models her
@@ -143,3 +143,45 @@ class ItemsByCategoryView(LoginRequiredMixin, View):
             'items': items,
         }
         return render(request, 'inventory/items_by_category.html', context)
+
+class CreateOrderView(LoginRequiredMixin, View):
+    def get(self, request):
+        department = Department.objects.get(name=request.user.profile.department)
+        categories = department.categories.all()
+        items = InventoryItem.objects.filter(category__in=categories)
+
+        form = OrderForm()
+        formset = OrderItemFormSet(queryset=InventoryItem.objects.none(), form_kwargs={'items': items})
+        return render(request, 'inventory/create_order.html', {'form': form, 'formset': formset})
+
+    def post(self, request):
+        department = Department.objects.get(name=request.user.profile.department)
+        categories = department.categories.all()
+        items = InventoryItem.objects.filter(category__in=categories)
+
+        form = OrderForm(request.POST)
+        formset = OrderItemFormSet(request.POST, form_kwargs={'items': items})
+
+        if form.is_valid() and formset.is_valid():
+            order = form.save(commit=False)
+            order.department = department
+            order.created_by = request.user
+            order.save()
+            for form in formset:
+                if form.cleaned_data.get('item'):
+                    order_item = form.save(commit=False)
+                    order_item.order = order
+                    order_item.save()
+            return redirect('order-list')
+
+        return render(request, 'inventory/create_order.html', {'form': form, 'formset': formset})
+
+class OrderListView(LoginRequiredMixin, View):
+    def get(self, request):
+        orders = Order.objects.filter(created_by=request.user)
+        return render(request, 'inventory/order_list.html', {'orders': orders})
+
+class OrderDetailView(LoginRequiredMixin, View):
+    def get(self, request, pk):
+        order = get_object_or_404(Order, pk=pk, created_by=request.user)
+        return render(request, 'inventory/order_detail.html', {'order': order})

@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
-from .models import Category, InventoryItem
+from .models import Category, InventoryItem, Order, OrderItem
 
 class UserRegisterForm(UserCreationForm):
 	email = forms.EmailField()
@@ -25,3 +25,21 @@ class CategoryForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         # Adjust parent field to show a hierarchy in a dropdown
         self.fields['parent'].queryset = Category.objects.all()
+
+class OrderForm(forms.ModelForm):
+    class Meta:
+        model = Order
+        fields = []
+
+class OrderItemForm(forms.ModelForm):
+    class Meta:
+        model = OrderItem
+        fields = ['item', 'quantity']
+
+    def __init__(self, *args, **kwargs):
+        items = kwargs.pop('items', None)
+        super().__init__(*args, **kwargs)
+        if items:
+            self.fields['item'].queryset = items
+
+OrderItemFormSet = forms.inlineformset_factory(Order, OrderItem, form=OrderItemForm, extra=1)

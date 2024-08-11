@@ -1,0 +1,28 @@
+{% extends 'inventory/base.html' %}
+
+{% block content %}
+    <div class="container mt-5">
+        <h1>Order Details</h1>
+        <p><strong>Order ID:</strong> {{ order.id }}</p>
+        <p><strong>Department:</strong> {{ order.department.name }}</p>
+        <p><strong>Date:</strong> {{ order.date_created|date:"Y-m-d H:i" }}</p>
+        <h2>Items</h2>
+        <table class="table table-hover table-striped">
+            <thead>
+                <tr>
+                    <th scope="col">Item</th>
+                    <th scope="col">Quantity</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order_item in order.orderitem_set.all %}
+                    <tr>
+                        <td>{{ order_item.item.name }}</td>
+                        <td>{{ order_item.quantity }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <a href="{% url 'order-list' %}" class="btn btn-outline-primary mt-3">Back to Orders</a>
+    </div>
+{% endblock content %}
