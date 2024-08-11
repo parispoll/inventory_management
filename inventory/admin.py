@@ -18,8 +18,15 @@ class OrderAdmin(admin.ModelAdmin):
 admin.site.register(Department)
 admin.site.register(Order, OrderAdmin)
 
-@admin.register(InventoryItem)
+#@admin.register(InventoryItem)
+
 class InventoryItemAdmin(admin.ModelAdmin):
     list_display = ('name', 'quantity', 'category')
     search_fields = ('name',)
     list_filter = ('category',)
+
+    def save_model(self, request, obj, form, change):
+        obj._changed_by = request.user  # Attach the user to the object
+        super().save_model(request, obj, form, change)
+
+admin.site.register(InventoryItem, InventoryItemAdmin)

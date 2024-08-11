@@ -1,4 +1,5 @@
 from django import forms
+from django.forms import modelformset_factory
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
 from .models import Category, InventoryItem, Order, OrderItem
@@ -43,3 +44,10 @@ class OrderItemForm(forms.ModelForm):
             self.fields['item'].queryset = items
 
 OrderItemFormSet = forms.inlineformset_factory(Order, OrderItem, form=OrderItemForm, extra=1)
+
+class InventoryItemForm(forms.ModelForm):
+    class Meta:
+        model = InventoryItem
+        fields = ['name', 'category', 'quantity']  # Include any other fields you want to edit
+
+InventoryItemFormSet = modelformset_factory(InventoryItem, form=InventoryItemForm, extra=0)

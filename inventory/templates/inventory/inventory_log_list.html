@@ -1,0 +1,64 @@
+<!-- templates/inventory/inventory_log_list.html -->
+
+{% extends 'inventory/base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1>Inventory Change Logs</h1>
+    <table class="table">
+    <thead>
+        <tr>
+            <th>Item Name</th>
+            <th>Previous Quantity</th>
+            <th>New Quantity</th>
+            <th>Changed By</th>
+            <th>Timestamp</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for log in logs %}
+        <tr>
+            <td>{{ log.item.name }}</td>
+            <td>{{ log.previous_quantity }}</td>
+            <td>{{ log.new_quantity }}</td>
+            <td>
+                {% if log.changed_by %}
+                    {{ log.changed_by.username }}
+                {% else %}
+                    Unknown
+                {% endif %}
+            </td>
+            <td>{{ log.timestamp|date:"Y-m-d H:i" }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+    {% if is_paginated %}
+        <nav aria-label="Page navigation">
+            <ul class="pagination">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                {% endif %}
+                {% for num in paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <li class="page-item active"><a class="page-link" href="#">{{ num }}</a></li>
+                    {% else %}
+                        <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                    {% endif %}
+                {% endfor %}
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
+</div>
+{% endblock %}

@@ -3,8 +3,8 @@ from django.urls import reverse_lazy, reverse
 from django.views.generic import TemplateView, View, CreateView, UpdateView, DeleteView, ListView
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.mixins import LoginRequiredMixin
-from .forms import UserRegisterForm, InventoryItemForm
-from .models import InventoryItem, Category, Order
+from .forms import UserRegisterForm, InventoryItemForm, InventoryItemForm, InventoryItemFormSet
+from .models import InventoryItem, Category, Order, InventoryLog
 from inventory_management.settings import LOW_QUANTITY
 from django.contrib import messages
 from django.db import models  # Import models her
@@ -185,3 +185,52 @@ class OrderDetailView(LoginRequiredMixin, View):
     def get(self, request, pk):
         order = get_object_or_404(Order, pk=pk, created_by=request.user)
         return render(request, 'inventory/order_detail.html', {'order': order})
+
+class InventoryLogListView(ListView):
+    model = InventoryLog
+    template_name = 'inventory/inventory_log_list.html'
+    context_object_name = 'logs'
+    paginate_by = 20  # Adjust as needed
+
+#@login_required
+def bulk_edit_inventory(request):
+    category = None  # Initialize category to None
+    
+    # Check if a category is provided via GET parameters
+    if 'category_id' in request.GET:
+        try:
+            category_id = request.GET.get('category_id')
+            category = Category.objects.get(id=category_id)
+        except Category.DoesNotExist:
+            category = None
+
+    if request.method == 'POST':
+        formset = InventoryItemFormSet(request.POST)
+        if formset.is_valid():
+            user = request.user  # Get the current user
+            
+            # Iterate through each form in the formset
+            for form in formset:
+                if form.has_changed():
+                    # Save the form
+                    form.instance.save()
+
+                    # Record changes in the log
+                    for field in form.changed_data:
+                        previous_value = form.initial.get(field, None)
+                        new_value = getattr(form.instance, field, None)
+                        InventoryLog.objects.create(
+                            item=form.instance,
+                            previous_quantity=previous_value if field == 'quantity' else None,
+                            new_quantity=new_value if field == 'quantity' else None,
+                            changed_by=user,
+                        )
+
+            return redirect('inventory:bulk_edit_inventory')  # Redirect to the same page after saving
+    else:
+        if category:
+            formset = InventoryItemFormSet(queryset=InventoryItem.objects.filter(category=category))
+        else:
+            formset = InventoryItemFormSet(queryset=InventoryItem.objects.all())
+
+    return render(request, 'inventory/bulk_edit_inventory.html', {'formset': formset})
