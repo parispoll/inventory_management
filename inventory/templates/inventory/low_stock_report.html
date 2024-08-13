@@ -1,7 +1,7 @@
 {% extends 'inventory/base.html' %}
 
 {% block content %}
-    <a href="{% url 'dashboard' %}" class="btn btn-outline-primary my-3 mx-4">Go back</a>
+    <a href="{% url 'inventory:dashboard' %}" class="btn btn-outline-primary my-3 mx-4">Go back</a>
     <div class="row">
         <div class="col-sm-11 col-md-8 mx-auto mt-5">
             <h1>Low Stock Report</h1>
@@ -37,7 +37,7 @@
                     {% endif %}
                 </tbody>
             </table>
-            <a href="{% url 'dashboard' %}" class="btn btn-outline-primary mt-3">Go Back</a>
+            <a href="{% url 'inventory:dashboard' %}" class="btn btn-outline-primary mt-3">Go Back</a>
         </div>
     </div>
 {% endblock content %}

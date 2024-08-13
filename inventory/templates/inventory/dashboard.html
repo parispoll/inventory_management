@@ -20,23 +20,24 @@
     <div class="row">
         <div class="col-md-10 col-12 mx-auto mt-5">
             <div class="d-flex justify-content-between mb-3">
-                <a href="{% url 'add-item' %}" class="btn btn-primary">Add Item</a>
+                <a href="{% url 'inventory:add-item' %}" class="btn btn-primary">Add Item</a>
+                 <a href="{% url 'inventory:bulk_edit_inventory' %}" class="btn btn-secondary">Bulk Edit</a>
                 
                 <!-- Buttons for reports -->
                 <div>
-                    <a href="{% url 'low-stock' %}" class="btn btn-warning me-2">Low Stock Report</a>
-                    <a href="{% url 'inventory-summary' %}" class="btn btn-info">Inventory Summary Report</a>
+                    <a href="{% url 'inventory:low-stock' %}" class="btn btn-warning me-2">Low Stock Report</a>
+                    <a href="{% url 'inventory:inventory-summary' %}" class="btn btn-info">Inventory Summary Report</a>
                 </div>
             </div>
 
             <div class="mb-3">
                 <label for="sort-by">Sort by:</label>
                 <select id="sort-by" class="form-select" onchange="window.location.href=this.value;">
-                    <option value="{% url 'dashboard' %}?sort=id" {% if sort_by == 'id' %}selected{% endif %}>ID</option>
-                    <option value="{% url 'dashboard' %}?sort=name" {% if sort_by == 'name' %}selected{% endif %}>Name</option>
-                    <option value="{% url 'dashboard' %}?sort=quantity" {% if sort_by == 'quantity' %}selected{% endif %}>Quantity</option>
-                    <option value="{% url 'dashboard' %}?sort=category" {% if sort_by == 'category' %}selected{% endif %}>Category</option>
-                    <option value="{% url 'dashboard' %}?sort=subcategory" {% if sort_by == 'subcategory' %}selected{% endif %}>Subcategory</option>
+                    <option value="{% url 'inventory:dashboard' %}?sort=id" {% if sort_by == 'id' %}selected{% endif %}>ID</option>
+                    <option value="{% url 'inventory:dashboard' %}?sort=name" {% if sort_by == 'name' %}selected{% endif %}>Name</option>
+                    <option value="{% url 'inventory:dashboard' %}?sort=quantity" {% if sort_by == 'quantity' %}selected{% endif %}>Quantity</option>
+                    <option value="{% url 'inventory:dashboard' %}?sort=category" {% if sort_by == 'category' %}selected{% endif %}>Category</option>
+                    <option value="{% url 'inventory:dashboard' %}?sort=subcategory" {% if sort_by == 'subcategory' %}selected{% endif %}>Subcategory</option>
                 </select>
             </div>
 
@@ -95,10 +96,10 @@
                                 {% endif %}
                             </td>
                             <td>
-                                <a href="{% url 'edit-item' item.id %}?next={% url 'dashboard' %}" class="btn btn-sm btn-warning">Edit</a>
-                                <form action="{% url 'delete-item' item.id %}" method="post" style="display: inline;">
+                                <a href="{% url 'inventory:edit-item' item.id %}?next={% url 'inventory:dashboard' %}" class="btn btn-sm btn-warning">Edit</a>
+                                <form action="{% url 'inventory:delete-item' item.id %}" method="post" style="display: inline;">
                                     {% csrf_token %}
-                                    <input type="hidden" name="next" value="{% url 'dashboard' %}">
+                                    <input type="hidden" name="next" value="{% url 'inventory:dashboard' %}">
                                     <button type="submit" class="btn btn-sm btn-danger">Delete</button>
                                 </form>
                             </td>

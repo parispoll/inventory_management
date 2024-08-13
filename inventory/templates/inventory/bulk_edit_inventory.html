@@ -1,39 +1,43 @@
 {% extends 'inventory/base.html' %}
 
-{% block content %}
-  <div class="container mt-5">
-    <h2>Bulk Edit Inventory</h2>
+{% load crispy_forms_tags %}
 
-    {% if category %}
-      <h4>Category: {{ category.name }}</h4>
+{% block content %}
+<div class="container">
+    <h2>Bulk Edit Inventory</h2>
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+        {% endfor %}
     {% endif %}
 
     <form method="post">
-      {% csrf_token %}
-      {{ formset.management_form }}
-
-      <table class="table table-bordered">
-        <thead>
-          <tr>
-            <th>Item Name</th>
-            <th>Category</th>
-            <th>Quantity</th>
-            <th>Price</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for form in formset %}
-            <tr>
-              <td>{{ form.name }}</td>
-              <td>{{ form.category }}</td>
-              <td>{{ form.quantity }}</td>
-              <td>{{ form.price }}</td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-
-      <button type="submit" class="btn btn-primary">Save Changes</button>
+        {% csrf_token %}
+        {{ formset.management_form }}
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Item</th>
+                    <th>Quantity</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for form in formset %}
+                    <tr>
+                        <td>{{ form.instance.name }}</td>  <!-- Display item name or identifier -->
+                        <td>
+                            {% if form.quantity.errors %}
+                                <div class="alert alert-danger">{{ form.quantity.errors }}</div>
+                            {% endif %}
+                            {{ form.quantity|as_crispy_field }}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <button type="submit" class="btn btn-primary">Save Changes</button>
     </form>
-  </div>
+</div>
 {% endblock %}

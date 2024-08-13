@@ -1,7 +1,13 @@
 from django.urls import path
 from . import views
-from .views import Index, SignUpView, Dashboard, AddItem, EditItem, DeleteItem, InventorySummaryReport, LowStockReport, ItemsByCategoryView, OrderListView, OrderDetailView, InventoryLogListView 
+from .views import (
+Index, SignUpView, Dashboard, AddItem, EditItem, DeleteItem, InventorySummaryReport, LowStockReport,
+ ItemsByCategoryView, OrderListView, OrderDetailView, 
+ InventoryLogListView,BulkEditInventory,
+                )
 from django.contrib.auth import views as auth_views
+
+app_name = 'inventory'
 
 urlpatterns = [
     path('', Index.as_view(), name='index'),
@@ -18,6 +24,6 @@ urlpatterns = [
     path('orders/', OrderListView.as_view(), name='order-list'),
     path('orders/<int:pk>/', OrderDetailView.as_view(), name='order-detail'),
     path('inventory/logs/', InventoryLogListView.as_view(), name='inventory-log-list'),
-     path('bulk-edit/', views.bulk_edit_inventory, name='bulk_edit_inventory'),
+    path('bulk-edit/', BulkEditInventory.as_view(), name='bulk_edit_inventory'),
             ]
 

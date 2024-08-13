@@ -13,7 +13,7 @@
                 <ul>
                     {% for category in category_counts %}
                         <li>
-                            <a href="{% url 'items-by-category' category.id %}">
+                            <a href="{% url 'inventory:items-by-category' category.id %}">
                                 {% if category.parent %}
                                     {{ category.parent.name }} - 
                                 {% endif %}
@@ -24,6 +24,6 @@
                 </ul>
             </div>
         </div>
-        <a href="{% url 'dashboard' %}" class="btn btn-outline-primary mt-3">Go Back</a>
+        <a href="{% url 'inventory:dashboard' %}" class="btn btn-outline-primary mt-3">Go Back</a>
     </div>
 {% endblock content %}

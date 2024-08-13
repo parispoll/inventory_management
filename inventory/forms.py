@@ -16,6 +16,9 @@ class InventoryItemForm(forms.ModelForm):
 	class Meta:
 		model = InventoryItem
 		fields = ['name','quantity','category']
+        
+
+InventoryItemFormSet = modelformset_factory(InventoryItem, form=InventoryItemForm, extra=0)
 
 class CategoryForm(forms.ModelForm):
     class Meta:
@@ -44,10 +47,3 @@ class OrderItemForm(forms.ModelForm):
             self.fields['item'].queryset = items
 
 OrderItemFormSet = forms.inlineformset_factory(Order, OrderItem, form=OrderItemForm, extra=1)
-
-class InventoryItemForm(forms.ModelForm):
-    class Meta:
-        model = InventoryItem
-        fields = ['name', 'category', 'quantity']  # Include any other fields you want to edit
-
-InventoryItemFormSet = modelformset_factory(InventoryItem, form=InventoryItemForm, extra=0)

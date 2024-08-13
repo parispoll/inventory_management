@@ -3,7 +3,7 @@
 {% block content %}
 <div class="container mt-5">
     <h1>Items in Category: {{ category.name }}</h1>
-    <a href="{% url 'inventory-summary' %}" class="btn btn-outline-primary my-3">Go Back</a>
+    <a href="{% url 'inventory:inventory-summary' %}" class="btn btn-outline-primary my-3">Go Back</a>
     
     <table class="table table-striped">
         <thead>
@@ -21,8 +21,8 @@
                 <td>{{ item.quantity }}</td>
                 <td>{{ item.price }}</td>
                  <td>
-                <a href="{% url 'edit-item' item.id %}?next={% url 'items-by-category' category.id %}" class="btn btn-sm btn-warning">Edit</a>
-                <form action="{% url 'delete-item' item.id %}?next={% url 'items-by-category' category.id %}" method="post" style="display: inline;">
+                <a href="{% url 'inventory:edit-item' item.id %}?next={% url 'inventory:items-by-category' category.id %}" class="btn btn-sm btn-warning">Edit</a>
+                <form action="{% url 'inventory:delete-item' item.id %}?next={% url 'inventory:items-by-category' category.id %}" method="post" style="display: inline;">
                 {% csrf_token %}
                 <button type="submit" class="btn btn-sm btn-danger">Delete</button>
     </form>

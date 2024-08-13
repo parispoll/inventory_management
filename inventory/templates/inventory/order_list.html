@@ -17,7 +17,7 @@
                         <td>{{ order.id }}</td>
                         <td>{{ order.department.name }}</td>
                         <td>
-                            <a href="{% url 'order-detail' order.id %}">
+                            <a href="{% url 'inventory:order-detail' order.id %}">
                                 {{ order.date_created|date:"Y-m-d H:i" }}
                             </a>
                         </td>
