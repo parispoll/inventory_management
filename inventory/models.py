@@ -50,10 +50,8 @@ class AuditLog(models.Model):
 
 class Department(models.Model):
     name = models.CharField(max_length=100)
-    categories = models.ManyToManyField('Category', related_name='departments')
+    accessible_categories = models.ManyToManyField('Category', related_name='departments')
 
-    def __str__(self):
-        return self.name
 
 class Order(models.Model):
     department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name='orders')
@@ -67,7 +65,7 @@ class Order(models.Model):
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
     item = models.ForeignKey(InventoryItem, on_delete=models.CASCADE)
-    quantity = models.PositiveIntegerField()
+    quantity_ordered = models.PositiveIntegerField()
 
     def __str__(self):
         return f"{self.quantity} x {self.item.name}"

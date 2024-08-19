@@ -1,5 +1,4 @@
 {% extends 'inventory/base.html' %}
-
 {% load crispy_forms_tags %}
 
 {% block content %}
@@ -13,20 +12,36 @@
         {% endfor %}
     {% endif %}
 
+    <!-- Category selection form -->
+    <form method="get" action="{% url 'inventory:bulk_edit_inventory' %}">
+        {{ category_form|crispy }}
+        <button type="submit" class="btn btn-primary">Filter Items</button>
+    </form>
+
+    <!-- Inventory item formset -->
     <form method="post">
         {% csrf_token %}
         {{ formset.management_form }}
         <table class="table table-bordered">
             <thead>
                 <tr>
+                    <th>Category</th>
                     <th>Item</th>
+                    <th>ID</th>
                     <th>Quantity</th>
                 </tr>
             </thead>
             <tbody>
                 {% for form in formset %}
                     <tr>
-                        <td>{{ form.instance.name }}</td>  <!-- Display item name or identifier -->
+                        <td>{{ form.instance.category.name }}</td>
+                        <td>{{ form.instance.name }}</td>
+                        <td>
+                            {% if form.id.errors %}
+                                <div class="alert alert-danger">{{ form.id.errors }}</div>
+                            {% endif %}
+                            {{ form.id|as_crispy_field }}
+                        </td>
                         <td>
                             {% if form.quantity.errors %}
                                 <div class="alert alert-danger">{{ form.quantity.errors }}</div>
@@ -41,3 +56,7 @@
     </form>
 </div>
 {% endblock %}
+
+
+
+

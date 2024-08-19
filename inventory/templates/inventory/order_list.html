@@ -1,29 +1,55 @@
 {% extends 'inventory/base.html' %}
 
 {% block content %}
-    <div class="container mt-5">
-        <h1>Orders</h1>
-        <table class="table table-hover table-striped">
-            <thead>
-                <tr>
-                    <th scope="col">Order ID</th>
-                    <th scope="col">Department</th>
-                    <th scope="col">Date</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for order in orders %}
-                    <tr>
-                        <td>{{ order.id }}</td>
-                        <td>{{ order.department.name }}</td>
-                        <td>
-                            <a href="{% url 'inventory:order-detail' order.id %}">
-                                {{ order.date_created|date:"Y-m-d H:i" }}
-                            </a>
-                        </td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+<div class="container mt-5">
+    <h1>Orders</h1>
+    
+    <!-- Dropdown to select a department -->
+    <div class="mb-3">
+        <form method="get" action="{% url 'inventory:order-list' %}">
+            <div class="form-group">
+                <label for="departmentSelect">Select Department:</label>
+                <select id="departmentSelect" name="department" class="form-control" onchange="this.form.submit()">
+                    <option value="">-- Select Department --</option>
+                    {% for department in departments %}
+                        <option value="{{ department.id }}" {% if department.id == department_id %}selected{% endif %}>
+                            {{ department.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </form>
     </div>
+    
+    <!-- Create Order Button -->
+    {% if department_id %}
+    <a href="{% url 'inventory:create-order' %}?department={{ department_id }}" class="btn btn-primary mb-3">
+        Create Order
+    </a>
+    {% endif %}
+    
+    <!-- Orders Table -->
+    <table class="table table-hover table-striped">
+        <thead>
+            <tr>
+                <th scope="col">Order ID</th>
+                <th scope="col">Department</th>
+                <th scope="col">Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in orders %}
+            <tr>
+                <td>{{ order.id }}</td>
+                <td>{{ order.department.name }}</td>
+                <td>
+                    <a href="{% url 'inventory:order-detail' order.id %}">
+                        {{ order.date_created|date:"Y-m-d H:i" }}
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
 {% endblock content %}

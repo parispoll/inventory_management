@@ -1,14 +1,53 @@
 {% extends 'inventory/base.html' %}
+{% load crispy_forms_tags %}
 
 {% block content %}
-    <h2>Create Order</h2>
+<div class="container">
+    <h2>Create Order for {{ department.name }}</h2>
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
     <form method="post">
         {% csrf_token %}
-        {{ form.as_p }}
         {{ formset.management_form }}
-        {% for form in formset %}
-            {{ form.as_p }}
-        {% endfor %}
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Item</th>
+                    <th>Current Quantity</th>
+                    <th>Quantity Ordered</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for form in formset %}
+                    <tr>
+                        <td>
+                            {{ form.item }} <!-- This should render a select box with available items -->
+                        </td>
+                        <td>
+                            <!-- Displaying the item quantity is not possible here as `form.item` is not an instance of InventoryItem -->
+                            {% if form.instance.item %}
+                                {{ form.instance.item.quantity }}
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if form.quantity_ordered.errors %}
+                                <div class="alert alert-danger">{{ form.quantity_ordered.errors }}</div>
+                            {% endif %}
+                            {{ form.quantity_ordered|as_crispy_field }}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
         <button type="submit" class="btn btn-primary">Submit Order</button>
     </form>
+</div>
 {% endblock %}

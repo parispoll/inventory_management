@@ -1,0 +1,31 @@
+{% extends 'inventory/base.html' %}
+
+{% block content %}
+<div class="container">
+    <h2>Departments</h2>
+
+    {% if departments %}
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Department Name</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for department in departments %}
+                    <tr>
+                        <td>{{ department.name }}</td>
+                        <td>
+                            <a href="{% url 'inventory:department-items' department.id %}" class="btn btn-primary">View Items</a>
+                            <a href="{% url 'inventory:create-order' department.id %}" class="btn btn-success">New Order</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No departments available.</p>
+    {% endif %}
+</div>
+{% endblock %}

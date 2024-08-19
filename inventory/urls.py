@@ -3,7 +3,8 @@ from . import views
 from .views import (
 Index, SignUpView, Dashboard, AddItem, EditItem, DeleteItem, InventorySummaryReport, LowStockReport,
  ItemsByCategoryView, OrderListView, OrderDetailView, 
- InventoryLogListView,BulkEditInventory,
+ InventoryLogListView,BulkEditInventory,CreateOrderView, error_page,
+  check_categories, department_items_view, department_list_view, create_order_view
                 )
 from django.contrib.auth import views as auth_views
 
@@ -25,5 +26,11 @@ urlpatterns = [
     path('orders/<int:pk>/', OrderDetailView.as_view(), name='order-detail'),
     path('inventory/logs/', InventoryLogListView.as_view(), name='inventory-log-list'),
     path('bulk-edit/', BulkEditInventory.as_view(), name='bulk_edit_inventory'),
+    path('create/', CreateOrderView.as_view(), name='create-order'),
+    path('error/', error_page, name='error_page'),  # Add this line
+    path('check-categories/<int:department_id>/', check_categories, name='check-categories'),
+    path('departments/', department_list_view, name='department-list'),
+    path('department-items/<int:department_id>/', department_items_view, name='department-items'),
+    path('new-order/<int:department_id>/', create_order_view, name='create-order'),
             ]
 
