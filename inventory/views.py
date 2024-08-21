@@ -1,6 +1,7 @@
+from django import forms
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy, reverse
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.views.generic import TemplateView, View, CreateView, UpdateView, DeleteView, ListView, FormView
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -11,6 +12,8 @@ from django.contrib import messages
 from django.db import models  # Import models her
 from django.db.models import Sum, Count, F
 from django.forms import modelformset_factory, formset_factory
+
+import logging
 
 class Index(TemplateView):
 	template_name= 'inventory/index.html'
@@ -204,11 +207,41 @@ class OrderListView(ListView):
     template_name = 'inventory/order_list.html'
     context_object_name = 'orders'
 
+    def get_queryset(self):
+        # Order by date_created in descending order
+        return Order.objects.order_by('-date_created')
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['departments'] = Department.objects.all()  # Fetch all departments
+        context['departments'] = Department.objects.all()
         context['department_id'] = self.request.GET.get('department', None)
         return context
+
+    def post(self, request, *args, **kwargs):
+        import json
+        data = json.loads(request.body)
+        order_id = data.get('order_id')
+        
+        if order_id is None:
+            return JsonResponse({'status': 'error', 'message': 'Order ID not provided'})
+
+        try:
+            order = Order.objects.get(id=order_id)
+            # Process the order and update inventory
+            for order_item in OrderItem.objects.filter(order=order):
+                inventory_item = InventoryItem.objects.get(id=order_item.item.id)
+                inventory_item.quantity -= order_item.quantity_ordered
+                inventory_item.save()
+            
+            order.confirmed = True
+            order.save()
+            return JsonResponse({'status': 'confirmed'})
+        except Order.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Order does not exist'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
+
+        return redirect('inventory:order-list')
 
 class OrderDetailView(LoginRequiredMixin, View):
     def get(self, request, pk):
@@ -220,6 +253,12 @@ class InventoryLogListView(ListView):
     template_name = 'inventory/inventory_log_list.html'
     context_object_name = 'logs'
     paginate_by = 20  # Adjust as needed
+
+    def get_queryset(self):
+        # Order by timestamp in descending order
+        return InventoryLog.objects.order_by('-timestamp')
+
+
 
 def error_page(request):
     return render(request, 'error.html', status=400)  # Adjust the template name and status as needed
@@ -256,83 +295,55 @@ def department_items_view(request, department_id):
 
 def create_order_view(request, department_id):
     department = get_object_or_404(Department, id=department_id)
-    accessible_categories = department.accessible_categories.all()  # Assuming you have a ManyToManyField or similar
+    accessible_categories = department.accessible_categories.all()  # Get categories accessible by the department
 
     # Filter inventory items based on accessible categories
     items = InventoryItem.objects.filter(category__in=accessible_categories).distinct()
 
-    # Define a formset with an extra form
-    OrderItemFormSet = formset_factory(OrderItemForm, extra=1)
-    
+    # Define a formset using modelformset_factory to correctly initialize it with the queryset
+    OrderItemFormSet = modelformset_factory(
+        OrderItem,
+        form=OrderItemForm,
+        extra=10,
+        widgets={
+            'item': forms.Select(attrs={'class': 'form-control'}),
+            'quantity_ordered': forms.NumberInput(attrs={'min': 0, 'class': 'form-control'}),
+        }
+    )
+
     if request.method == 'POST':
-        formset = OrderItemFormSet(request.POST, request.FILES)
+        formset = OrderItemFormSet(request.POST, request.FILES, queryset=OrderItem.objects.none())
+        for form in formset.forms:
+            form.fields['item'].queryset = items  # Set the queryset for each form individually
+
+        # Debugging outputs
+        print("POST request received")
+        print("Formset initialized with POST data")
+        print("Formset data:", formset.data)
+
         if formset.is_valid():
-            order = Order.objects.create(department=department)
+            print("Formset is valid")
+            order = Order.objects.create(department=department,created_by=request.user)
+
             for form in formset:
-                if form.is_valid():
+                if form.is_valid() and form.cleaned_data.get('item'):  # Check if the form has an item selected
+                    print(f"Form is valid, form data: {form.cleaned_data}")
                     order_item = form.save(commit=False)
                     order_item.order = order
                     order_item.save()
+                    print(f"OrderItem saved with ID: {order_item.id}")
             messages.success(request, 'Order created successfully!')
-            return redirect('department-items', department_id=department_id)
+            return redirect('inventory:order-list')
         else:
+            print(f"Formset is invalid, errors: {formset.errors}")
             messages.error(request, 'There was an error with your submission.')
     else:
-        # Pass the filtered items to the formset
-        formset = OrderItemFormSet()
-        # Manually set the queryset for each form in the formset
-        for form in formset:
-            form.fields['item'].queryset = items
+        formset = OrderItemFormSet(queryset=OrderItem.objects.none())  # Pass an empty queryset
+        for form in formset.forms:
+            form.fields['item'].queryset = items  # Set the queryset for each form individually
 
     return render(request, 'inventory/create_order.html', {
         'formset': formset,
         'department': department,
     })
-    
-class CreateOrderView(FormView):
-    template_name = 'inventory/create_order.html'
-    form_class = OrderItemFormSet
-    success_url = reverse_lazy('orders-list')
-
-    def get(self, request, *args, **kwargs):
-        department_id = request.GET.get('department')
-        if department_id:
-            try:
-                department = Department.objects.get(id=department_id)
-                accessible_categories = department.accessible_categories.all()
-                inventory_items = InventoryItem.objects.filter(category__in=accessible_categories)
-            except Department.DoesNotExist:
-                inventory_items = InventoryItem.objects.none()  # Handle invalid department ID
-        else:
-            inventory_items = InventoryItem.objects.none()  # No items if department isn't specified
-
-        formset = OrderItemFormSet(queryset=OrderItem.objects.none(), initial=[
-            {'item': item} for item in inventory_items
-        ])
-        return self.render_to_response(self.get_context_data(formset=formset))
-
-    def post(self, request, *args, **kwargs):
-        formset = OrderItemFormSet(request.POST)
-        if formset.is_valid():
-            order = Order.objects.create()
-            for form in formset:
-                order_item = form.save(commit=False)
-                order_item.order = order
-                order_item.save()
-            messages.success(request, 'Order created successfully!')
-            return self.form_valid(formset)
-        else:
-            messages.error(request, 'There was an error with your submission.')
-            return self.form_invalid(formset)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['formset'] = kwargs.get('formset', None)
-        return context
-
-    def form_valid(self, formset):
-        return super().form_valid(formset)
-
-    def form_invalid(self, formset):
-        return self.render_to_response(self.get_context_data(formset=formset))
 

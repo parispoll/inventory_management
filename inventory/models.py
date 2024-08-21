@@ -51,16 +51,21 @@ class AuditLog(models.Model):
 class Department(models.Model):
     name = models.CharField(max_length=100)
     accessible_categories = models.ManyToManyField('Category', related_name='departments')
-
+    
+    def __str__(self):
+        return self.name
 
 class Order(models.Model):
     department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name='orders')
     items = models.ManyToManyField(InventoryItem, through='OrderItem')
     date_created = models.DateTimeField(auto_now_add=True)
+    confirmed = models.BooleanField(default=False)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
 
     def __str__(self):
         return f"Order {self.id} by {self.department.name}"
+
+
 
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
@@ -68,5 +73,5 @@ class OrderItem(models.Model):
     quantity_ordered = models.PositiveIntegerField()
 
     def __str__(self):
-        return f"{self.quantity} x {self.item.name}"
+        return f"{self.quantity_ordered} x {self.item.name}"
 

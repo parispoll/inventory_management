@@ -4,52 +4,72 @@
 <div class="container mt-5">
     <h1>Orders</h1>
     
-    <!-- Dropdown to select a department -->
-    <div class="mb-3">
-        <form method="get" action="{% url 'inventory:order-list' %}">
-            <div class="form-group">
-                <label for="departmentSelect">Select Department:</label>
-                <select id="departmentSelect" name="department" class="form-control" onchange="this.form.submit()">
-                    <option value="">-- Select Department --</option>
-                    {% for department in departments %}
-                        <option value="{{ department.id }}" {% if department.id == department_id %}selected{% endif %}>
-                            {{ department.name }}
-                        </option>
-                    {% endfor %}
-                </select>
-            </div>
-        </form>
-    </div>
-    
-    <!-- Create Order Button -->
-    {% if department_id %}
-    <a href="{% url 'inventory:create-order' %}?department={{ department_id }}" class="btn btn-primary mb-3">
-        Create Order
-    </a>
-    {% endif %}
-    
     <!-- Orders Table -->
     <table class="table table-hover table-striped">
-        <thead>
-            <tr>
-                <th scope="col">Order ID</th>
-                <th scope="col">Department</th>
-                <th scope="col">Date</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for order in orders %}
-            <tr>
-                <td>{{ order.id }}</td>
-                <td>{{ order.department.name }}</td>
-                <td>
-                    <a href="{% url 'inventory:order-detail' order.id %}">
-                        {{ order.date_created|date:"Y-m-d H:i" }}
-                    </a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <thead>
+        <tr>
+            <th scope="col">Order ID</th>
+            <th scope="col">Department</th>
+            <th scope="col">Date</th>
+            <th scope="col">Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for order in orders %}
+        <tr>
+            <td>{{ order.id }}</td>
+            <td>{{ order.department.name }}</td>
+            <td>
+                <a href="{% url 'inventory:order-detail' order.id %}">
+                    {{ order.date_created|date:"Y-m-d H:i" }}
+                </a>
+            </td>
+            <td>
+                {% if not order.confirmed %}
+                <button class="btn btn-primary confirm-btn" data-order-id="{{ order.id }}">Confirm</button>
+                {% else %}
+                Confirmed
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+    const confirmButtons = document.querySelectorAll('.confirm-btn');
+    
+    confirmButtons.forEach(button => {
+        button.addEventListener('click', function () {
+            const orderId = this.getAttribute('data-order-id');
+            console.log('Confirming order with ID:', orderId);  // Debugging statement
+
+            fetch('', {
+                method: 'POST',
+                body: JSON.stringify({ order_id: orderId }),  // Ensure order_id is sent correctly
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}' // CSRF token for security
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'confirmed') {
+                    this.textContent = 'Confirmed';
+                    this.classList.remove('btn-primary');
+                    this.classList.add('btn-success');
+                    this.disabled = true;
+                } else if (data.status === 'error') {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    });
+});
+
+</script>
+
 {% endblock content %}
